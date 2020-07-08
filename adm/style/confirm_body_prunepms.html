@@ -1,0 +1,29 @@
+<!-- INCLUDE overall_header.html -->
+
+<!-- IF COUNT_PMS -->
+<form id="confirm" method="post" action="{S_CONFIRM_ACTION}">
+
+<fieldset id="pmcount">
+	<h2>{L_PMS_TO_PURGE}</h2>
+</fieldset>
+
+<fieldset>
+	<h1>{MESSAGE_TITLE}</h1>
+	<p>{MESSAGE_TEXT}</p>
+
+	{S_HIDDEN_FIELDS}
+
+	<div style="text-align: center;">
+		<input type="submit" name="confirm" value="{L_YES}" class="button2" />&nbsp; 
+		<input type="submit" name="cancel" value="{L_NO}" class="button2" />
+	</div>
+</fieldset>
+</form>
+<!-- ELSE -->
+<div class="errorbox">
+	<h3>{L_WARNING}</h3>
+	<p><strong>{L_PMS_PRUNE_FAILURE}</strong></p>
+</div>
+<!-- ENDIF -->
+
+<!-- INCLUDE overall_footer.html -->
