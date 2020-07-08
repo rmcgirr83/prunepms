@@ -1,7 +1,12 @@
 <!-- INCLUDE overall_header.html -->
 
-<!-- IF COUNT_PMS -->
+<!-- IF S_COUNT_PMS -->
 <form id="confirm" method="post" action="{S_CONFIRM_ACTION}">
+
+<div class="errorbox">
+	<h3>{L_WARNING}</h3>
+	<p>{L_PMS_CONFIRM_WARN}</p>
+</div>
 
 <fieldset id="pmcount">
 	<h2>{L_PMS_TO_PURGE}</h2>
@@ -14,7 +19,7 @@
 	{S_HIDDEN_FIELDS}
 
 	<div style="text-align: center;">
-		<input type="submit" name="confirm" value="{L_YES}" class="button2" />&nbsp; 
+		<input type="submit" name="confirm" value="{L_YES}" class="button2" />&nbsp;
 		<input type="submit" name="cancel" value="{L_NO}" class="button2" />
 	</div>
 </fieldset>

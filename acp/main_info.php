@@ -20,8 +20,8 @@ class main_info
 			'version'	=> '1.0.0',
 			'modes'		=> [
 				'main'	=> [
-					'title' => 'ACP_PPMS_TITLE',	
-					'auth' => 'ext_rmcgirr83/prunepms && acl_a_user',	
+					'title' => 'ACP_PPMS_TITLE',
+					'auth' => 'ext_rmcgirr83/prunepms && acl_a_user',
 					'cat' => ['ACP_CAT_USERS'],
 				],
 			],

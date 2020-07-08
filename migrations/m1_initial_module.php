@@ -25,7 +25,7 @@ class m1_initial_module extends \phpbb\db\migration\migration
 	{
 		return [
 			['module.add', [
-				'acp', 
+				'acp',
 				'ACP_CAT_USERS',
 				[
 					'module_basename'	=> '\rmcgirr83\prunepms\acp\main_module',

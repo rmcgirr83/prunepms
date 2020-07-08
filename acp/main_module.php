@@ -74,9 +74,13 @@ class main_module
 					trigger_error($user->lang('PMS_PRUNE_FAILURE') . adm_back_link($this->u_action), E_USER_WARNING);
 				}
 
+				$prune_date = explode('-', $prune_date);
+				$prune_date = gmmktime(0, 0, 0, (int) $prune_date[1], (int) $prune_date[0], (int) $prune_date[2]);
+				$prune_date = $user->format_date($prune_date, 'M d Y');
+
 				$template->assign_vars(array(
-					'COUNT_PMS'				=> count($pm_msg_ids),
-					'L_PMS_TO_PURGE'		=> $user->lang('PMS_TO_PURGE', count($pm_msg_ids)),
+					'S_COUNT_PMS'				=> count($pm_msg_ids),
+					'L_PMS_TO_PURGE'		=> $user->lang('PMS_TO_PURGE', count($pm_msg_ids), $prune_date),
 				));
 
 				confirm_box(false, $user->lang['CONFIRM_OPERATION'], build_hidden_fields(array(
@@ -108,7 +112,7 @@ class main_module
 		global $db;
 
 		$pm_stats = array();
-		
+
 		// get total count of PMs
 		$sql = 'SELECT COUNT(msg_id) as msg_id_count
 			FROM ' . PRIVMSGS_TABLE;
@@ -121,7 +125,7 @@ class main_module
 			FROM ' . PRIVMSGS_TABLE;
 		$result = $db->sql_query($sql);
 		$pm_stats['oldest_message_time'] = (int) $db->sql_fetchfield('oldest_message_time');
-		$db->sql_freeresult($result);	
+		$db->sql_freeresult($result);
 
 		// get newest message date
 		$sql = 'SELECT MAX(message_time) as newest_message_time
@@ -129,7 +133,7 @@ class main_module
 		$result = $db->sql_query($sql);
 		$pm_stats['newest_message_time'] = (int) $db->sql_fetchfield('newest_message_time');
 		$db->sql_freeresult($result);
-		
+
 		return $pm_stats;
 	}
 
@@ -141,7 +145,7 @@ class main_module
 		$prune_date = gmmktime(0, 0, 0, (int) $prune_date[1], (int) $prune_date[0], (int) $prune_date[2]);
 
 		// Get private messages
-		$sql = 'SELECT msg_id 
+		$sql = 'SELECT msg_id
 			FROM ' . PRIVMSGS_TABLE . '
 			WHERE message_time < ' . $prune_date;
 		$result = $db->sql_query($sql);
@@ -160,7 +164,7 @@ class main_module
 		if ($ignore_ams)
 		{
 			// ignore msg_id where author is admin or mod
-			$sql = 'SELECT msg_id 
+			$sql = 'SELECT msg_id
 				FROM ' . PRIVMSGS_TO_TABLE . '
 				WHERE ' . $db->sql_in_set('author_id', $ignore_ams);
 			$result = $db->sql_query($sql);
@@ -175,7 +179,7 @@ class main_module
 
 			// now do the same for user_id
 			// ignore msg_id where user is admin or mod
-			$sql = 'SELECT msg_id 
+			$sql = 'SELECT msg_id
 				FROM ' . PRIVMSGS_TO_TABLE . '
 				WHERE ' . $db->sql_in_set('user_id', $ignore_ams);
 			$result = $db->sql_query($sql);
@@ -209,7 +213,7 @@ class main_module
 		{
 			$pm_msg_ids = array($pm_msg_ids);
 		}
-		
+
 		$pm_msg_ids = array_map('intval', $pm_msg_ids);
 
 		// first close reports
@@ -221,7 +225,7 @@ class main_module
 		/** @var \phpbb\attachment\manager $attachment_manager */
 		$attachment_manager = $phpbb_container->get('attachment.manager');
 		$attachment_manager->delete('message', $pm_msg_ids, false);
-		unset($attachment_manager);		
+		unset($attachment_manager);
 
 		// delete the pms
 		$db->sql_query('DELETE FROM ' . PRIVMSGS_TABLE . ' WHERE ' . $db->sql_in_set('msg_id', $pm_msg_ids));

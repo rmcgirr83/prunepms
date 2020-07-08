@@ -47,20 +47,22 @@ $lang = array_merge($lang, array(
 	'ACP_PPMS_EXPLAIN'		=> 'Here you can prune private messages on the board. Choose a date and all PMs prior to that date will be removed.',
 	'PMS_BEFORE_DATE'			=> 'Delete PMs before date',
 	'PMS_BEFORE_DATE_EXPLAIN'	=> 'Enter a date in DD-MM-YYYY format.',
-	
+
 	'PMS_PRUNE_FAILURE'			=> 'No PMs fit the selected criteria',
 	'PMS_STATS'					=> 'PM statistics',
 	'PM_TOTAL_STATS'			=> 'There are <i>%d</i> private messages in the database having dates between <i>%1s</i> and <i>%2s</i>',
 	'PMS_WARN'					=> '<strong>Running this script will remove PMs from your database prior to the date as specified below. </strong><br>It is <strong>strongly</strong> recommended you make a backup as the process is irreversible. The author of this script takes <strong>NO RESPONSIBILITY</strong> for actions you preform using this script.<br><strong>YOU’VE BEEN WARNED!</strong>',
 
+	'PMS_CONFIRM_WARN'			=> 'Clicking on `Yes` below will delete the number of PMs stated.  This process is <i>irreversible</i>, so please ensure this is your intention.',
+
 	'PPMS_IGNORE_ADMINS_AND_MODS'			=> 'Ignore Admins and Global Mods',
 	'PPMS_IGNORE_ADMINS_AND_MODS_EXPLAIN'	=> 'If selected PMs to/from Admins and Mods will be ignored',
-	
+
 	'PPMS_INVALID_DATE'		=> 	'The date has to be formatted <kbd>DD-MM-YYYY</kbd>.',
 
 	'PPMS_MESSAGES_DELETED'	=> 'Selected private messages have been deleted.',
-	'PMS_TO_PURGE'			=> '<strong><i>%d</i></strong> PMs will be purged!!',
+	'PMS_TO_PURGE'			=> '<strong><i>%d</i></strong> private messages with a date prior to <i>%s</i> will be purged!!',
 	// ACP Logs
 	'LOG_PPMS_DELETED'		=> '<strong>Prune PMS  - private messages have been deleted.</strong>',
-	'PMS_DELETED_SUCCESS'	=> 'PMs were successfully deleted',	
+	'PMS_DELETED_SUCCESS'	=> 'PMs were successfully deleted',
 ));
