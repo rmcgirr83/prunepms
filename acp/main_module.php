@@ -30,8 +30,15 @@ class main_module
 
 		$prune = (isset($_POST['prune'])) ? true : false;
 
-		$ignore_admin_mods = $this->get_admin_mods();
 		$prune_date = $request->variable('pms_before', '');
+
+		$ignore_ams_switch = $request->variable('ignore_ams', 0);
+		$ignore_ams = array();
+		if ($ignore_ams_switch)
+		{
+			$ignore_ams = $this->get_admin_mods();
+		}
+
 		$error = '';
 
 		if ($prune && validate_date($prune_date))
@@ -41,14 +48,7 @@ class main_module
 
 		if ($prune && empty($error))
 		{
-			$ignore_ams = $request->variable('ignore_ams', 0);
-
-			if ($ignore_ams)
-			{
-				$ignore_ams = $ignore_admin_mods;
-			}
-
-			// We count the PMs which will be pruned...
+			// private message ids that will get pruned
 			$pm_msg_ids = $this->get_prune_pms($prune_date, $ignore_ams);
 
 			if (confirm_box(true))
@@ -89,47 +89,86 @@ class main_module
 					'prune'			=> 1,
 
 					'pms_before' 	=> $request->variable('pms_before', ''),
+					'ignore_ams'	=> $request->variable('ignore_ams', 0),
 
 				)), 'confirm_body_prunepms.html');
 			}
 		}
 
-		$pm_stats = $this->get_pm_stats();
+		$pm_stats = $this->get_pm_stats($ignore_ams);
 		$pm_count = $pm_stats['pm_count'];
-		$pm_oldest_time = $user->format_date($pm_stats['oldest_message_time']);
-		$pm_newest_time = $user->format_date($pm_stats['newest_message_time']);
+		$pm_oldest_time = $user->format_date($pm_stats['oldest_message_time'], 'M d Y');
+		$pm_newest_time = $user->format_date($pm_stats['newest_message_time'], 'M d Y');
+
+		$pms_stats_message = '';
+
+		if ($pm_count)
+		{
+			if ($ignore_ams_switch)
+			{
+				$pms_stats_message = $user->lang('PM_TOTAL_STATS_NO_AMS', $pm_count, $pm_oldest_time, $pm_newest_time);
+			}
+			else if(!$ignore_ams_switch)
+			{
+				$pms_stats_message = $user->lang('PM_TOTAL_STATS', $pm_count, $pm_oldest_time, $pm_newest_time);
+			}
+		}
+		else
+		{
+			$pms_stats_message = $user->lang('PM_NO_STATS', $pm_count);
+		}
 
 		$template->assign_vars(array(
 			'ERROR'			=> $error,
 			'PM_COUNT'		=> $pm_count,
-			'L_PM_TOTAL_STATS'	=> $user->lang('PM_TOTAL_STATS', $pm_count, $pm_oldest_time, $pm_newest_time),
+			'S_SELECTED'		=> $ignore_ams_switch,
+			'L_PM_TOTAL_STATS'	=> $pms_stats_message,
 			'U_ACTION'		=> $this->u_action,
 		));
 	}
 
-	private function get_pm_stats()
+	/* get_pm_stats				private message statistics
+	*
+	* @param	$ignore_ams		array of administrators and moderators that we ignore
+	*
+	* @access	private
+	* @return	array			array of private message statistics
+	*/
+	private function get_pm_stats($ignore_ams = array())
 	{
 		global $db;
 
+		$sql_where = '';
+
+		// ensure the parameter is an array
+		if (!is_array($ignore_ams))
+		{
+			$ignore_ams = array($ignore_ams);
+		}
+
+		if (sizeof(array_filter($ignore_ams)))
+		{
+			$sql_where = ' WHERE ' . $db->sql_in_set('author_id', $ignore_ams, true);
+		}
 		$pm_stats = array();
 
 		// get total count of PMs
 		$sql = 'SELECT COUNT(msg_id) as msg_id_count
-			FROM ' . PRIVMSGS_TABLE;
+			FROM ' . PRIVMSGS_TABLE . $sql_where;
 		$result = $db->sql_query($sql);
 		$pm_stats['pm_count'] = (int) $db->sql_fetchfield('msg_id_count');
 		$db->sql_freeresult($result);
 
 		// get oldest message date
 		$sql = 'SELECT MIN(message_time) as oldest_message_time
-			FROM ' . PRIVMSGS_TABLE;
+			FROM ' . PRIVMSGS_TABLE . $sql_where;
 		$result = $db->sql_query($sql);
 		$pm_stats['oldest_message_time'] = (int) $db->sql_fetchfield('oldest_message_time');
 		$db->sql_freeresult($result);
 
 		// get newest message date
 		$sql = 'SELECT MAX(message_time) as newest_message_time
-			FROM ' . PRIVMSGS_TABLE;
+			FROM ' . PRIVMSGS_TABLE . $sql_where;
 		$result = $db->sql_query($sql);
 		$pm_stats['newest_message_time'] = (int) $db->sql_fetchfield('newest_message_time');
 		$db->sql_freeresult($result);
@@ -137,7 +176,15 @@ class main_module
 		return $pm_stats;
 	}
 
-	private function get_prune_pms($prune_date, $ignore_ams = false)
+	/* get_prune_pms			determine which pms to delete
+	*
+	* @param	$prune_date		the date that will determine the cutoff
+	* @param	$ignore_ams		if we ignore administrators and moderators
+	*
+	* @access	private
+	* @return	array			an array of msg_ids
+	*/
+	private function get_prune_pms($prune_date, $ignore_ams = array())
 	{
 		global $db;
 
@@ -171,10 +218,10 @@ class main_module
 			$row = $db->sql_fetchrowset($result);
 			$db->sql_freeresult($result);
 
-			$ignored_pm_author_ids = array();
+			$ignored_msg_ids = array();
 			foreach ($row as $key => $value)
 			{
-				$ignored_pm_author_ids[] = $value['msg_id'];
+				$ignored_msg_ids[] = $value['msg_id'];
 			}
 
 			// now do the same for user_id
@@ -186,24 +233,31 @@ class main_module
 			$row = $db->sql_fetchrowset($result);
 			$db->sql_freeresult($result);
 
-			$ignored_pm_user_ids = array();
 			foreach ($row as $key => $value)
 			{
-				$ignored_pm_user_ids[] = $value['msg_id'];
+				$ignored_msg_ids[] = $value['msg_id'];
 			}
 
-			//combine the two arrays
-			$ignored_pms = array_unique(array_merge($ignored_pm_author_ids, $ignored_pm_user_ids));
+			//only return unique values
+			$ignored_pms = array_unique($ignored_msg_ids);
 		}
 
 		// now remove the msg ids from the initial array of PMs to delete
 		$pms_msg_id = array_diff($pms_to_purge, $ignored_pms);
 
+		// sort the array
 		asort($pms_msg_id);
 
 		return $pms_msg_id;
 	}
 
+	/* delete_pms				actual deletion of the pms
+	*
+	* @param	$pm_msg_ids		an array of msg_ids
+	*
+	* @access	private
+	* @return	null
+	*/
 	private function delete_pms($pm_msg_ids)
 	{
 		global $db, $phpbb_root_path, $phpbb_container;
@@ -215,6 +269,18 @@ class main_module
 		}
 
 		$pm_msg_ids = array_map('intval', $pm_msg_ids);
+
+		//chunk the array into smaller bites so we don't crash the server
+		$array_chunk = array_chunk($pm_msg_ids, 10000);
+		unset($pm_msg_ids);
+
+		$array_count = count($array_chunk);
+
+		// can't seem to get around having queries in a loop here
+		// need to chunk up the msg_id arrays as some users may have thousands of PMs they're trying to delete
+		for ($i = 0; $i < $array_count; ++$i)
+		{
+			$pm_msg_ids = $array_chunk[$i];
 
 		// first close reports
 		$db->sql_query('UPDATE ' . REPORTS_TABLE . ' SET report_closed = 1 WHERE ' . $db->sql_in_set('pm_id', $pm_msg_ids));
@@ -229,9 +295,14 @@ class main_module
 
 		// delete the pms
 		$db->sql_query('DELETE FROM ' . PRIVMSGS_TABLE . ' WHERE ' . $db->sql_in_set('msg_id', $pm_msg_ids));
-
+		}
 	}
 
+	/* get_admins_mods			an array of administrators and moderators
+	*
+	* @access	private
+	* @return	array
+	*/
 	private function get_admin_mods()
 	{
 		global $auth, $db;
@@ -248,12 +319,13 @@ class main_module
 		$sql = 'SELECT user_id FROM ' . MODERATOR_CACHE_TABLE;
 		$result = $db->sql_query($sql);
 
-		$mod_f = array();
+		$forum_mod = array();
 		while ($row = $db->sql_fetchrow($result))
 		{
-			$mod_f[] = (int) $row['user_id'];
+			$forum_mod[] = (int) $row['user_id'];
 		}
+		$db->sql_freeresult($result);
 
-		return array_unique(array_merge($admin_ary, $mod_ary, $mod_f));
+		return array_unique(array_merge($admin_ary, $mod_ary, $forum_mod));
 	}
 }
