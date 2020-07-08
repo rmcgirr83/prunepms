@@ -116,7 +116,7 @@ class main_module
 			{
 				$pms_stats_message = $user->lang('PM_TOTAL_STATS_NO_AMS', $pm_count, $pm_oldest_time, $pm_newest_time);
 			}
-			else if(!$ignore_ams_switch)
+			else if (!$ignore_ams_switch)
 			{
 				$pms_stats_message = $user->lang('PM_TOTAL_STATS', $pm_count, $pm_oldest_time, $pm_newest_time);
 			}
