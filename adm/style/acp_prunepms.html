@@ -1,55 +1,55 @@
-<!-- INCLUDE overall_header.html -->
+{% INCLUDE 'overall_header.html' %}
 
 <a id="maincontent"></a>
 
-<h1>{L_ACP_PPMS}</h1>
+<h1>{{ lang('ACP_PPMS') }}</h1>
 
-<p>{L_ACP_PPMS_EXPLAIN}</p>
+<p>{{ lang('ACP_PPMS_EXPLAIN') }}</p>
 
+{% if PM_COUNT %}
 <div class="errorbox notice">
-	<h3>{L_NOTICE}</h3>
-	<p>{L_PMS_WARN}</p>
+	<h3>{{ lang('NOTICE') }}</h3>
+	<p>{{ lang('PMS_WARN') }}</p>
 </div>
+{% endif %}
 
-<!-- IF ERROR -->
+{% if ERROR %}
 	<div class="errorbox">
-		<h3>{L_WARNING}</h3>
-		<p>{ERROR}</p>
+		<h3>{{ lang('WARNING') }}</h3>
+		<p>{{ ERROR }}</p>
 	</div>
-<!-- ENDIF -->
+{% endif %}
 
-<form id="acp_prunepms" method="post" action="{U_ACTION}">
+<form id="acp_prunepms" method="post" action="{{ U_ACTION }}">
 
-<!-- IF PM_COUNT -->
 <fieldset>
-	<legend>{L_PMS_STATS}</legend>
-	<p><strong>{L_PM_TOTAL_STATS}</strong></p>
+	<legend>{{ lang('PMS_STATS') }}</legend>
+	<p><strong>{{ lang('PM_TOTAL_STATS') }}</strong></p>
 </fieldset>
-<!-- ENDIF -->
 
 <fieldset>
-	<legend>{L_CRITERIA}</legend>
+	<legend>{{ lang('CRITERIA') }}</legend>
 
 	<dl>
-		<dt><label for="pms_before">{L_PMS_BEFORE_DATE}{L_COLON}</label><br /><span>{L_PMS_BEFORE_DATE_EXPLAIN}</span></dt>
+		<dt><label for="prune_date">{{ lang('PMS_BEFORE_DATE') }}{{ lang('COLON') }}</label><br /><span>{{ lang('PMS_BEFORE_DATE_EXPLAIN') }}</span></dt>
 		<dd>
-			<strong>{L_BEFORE}</strong> <input type="text" id="pms_before" name="pms_before" />
+			<strong>{{ lang('BEFORE') }}</strong> <input type="text" id="prune_date" name="prune_date" value="{PRUNE_DATE}" />
 		</dd>
 	</dl>
 	<dl>
-		<dt><label for="ignore_ams">{L_PPMS_IGNORE_ADMINS_AND_MODS}{L_COLON}</label><br /><span>{L_PPMS_IGNORE_ADMINS_AND_MODS_EXPLAIN}</span></dt>
-		<dd><label><input type="radio" class="radio" name="ignore_ams" value="1" checked="checked" /> {L_YES}</label>
-			<label><input type="radio" class="radio" id="ignore_ams" name="ignore_ams" value="0" /> {L_NO}</label></dd>
+		<dt><label for="ignore_ams">{{ lang('PPMS_IGNORE_ADMINS_AND_MODS') }}{{ lang('COLON') }}</label><br /><span>{{ lang('PPMS_IGNORE_ADMINS_AND_MODS_EXPLAIN') }}</span></dt>
+		<dd><label><input type="radio" class="radio" name="ignore_ams" value="1" {% if S_SELECTED %}checked="checked"{% endif %} /> {{ lang('YES') }}</label>
+			<label><input type="radio" class="radio" id="ignore_ams" name="ignore_ams" value="0" {% if not S_SELECTED %}checked="checked"{% endif %} /> {{ lang('NO') }}</label></dd>
 	</dl>
 
 	<p class="submit-buttons">
 		<input type="hidden" name="prune" value="1" />
 
-		<input class="button1" type="submit" id="update" name="update" value="{L_SUBMIT}" />&nbsp;
-		<input class="button2" type="reset" id="reset" name="reset" value="{L_RESET}" />
-		{S_FORM_TOKEN}
+		<input class="button2" type="submit" id="update" name="update" value="{{ lang('SUBMIT') }}" />&nbsp;
+		<input class="button2" type="reset" id="reset" name="reset" value="{{ lang('RESET') }}" />
+		{{ S_FORM_TOKEN }}
 	</p>
 </fieldset>
 </form>
 
-<!-- INCLUDE overall_footer.html -->
+{% INCLUDE 'overall_footer.html' %}

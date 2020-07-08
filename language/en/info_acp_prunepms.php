@@ -51,8 +51,10 @@ $lang = array_merge($lang, array(
 	'PMS_PRUNE_FAILURE'			=> 'No PMs fit the selected criteria',
 	'PMS_STATS'					=> 'PM statistics',
 	'PM_TOTAL_STATS_NO_AMS'		=> 'There are a total of <i>%d</i> private messages in the database having dates between <i>%1s</i> and <i>%2s</i>.  This number excludes administrators and moderators.',
-	'PM_TOTAL_STATS'			=> 'There are a total of <i>%d</i> private messages in the database having dates between <i>%1s</i> and <i>%2s</i>',
+	'PM_TOTAL_STATS'			=> 'There are a total of <i>%d</i> private messages in the database having dates between <i>%1s</i> and <i>%2s</i>.',
 	'PM_NO_STATS'				=> 'There are <i>%d</i> private messages to be deleted',
+	'PM_CHANGE_DATE'			=> 'The number of PMs to delete is large.  You should consider changing the date to reduce server load.',
+	'REFRESH'					=> 'Refresh',
 	'PMS_WARN'					=> '<strong>Running this script will remove PMs from your database prior to the date as specified below. </strong><br>It is <strong>strongly</strong> recommended you make a backup as the process is irreversible. The author of this script takes <strong>NO RESPONSIBILITY</strong> for actions you preform using this script.<br><strong>YOU’VE BEEN WARNED!</strong>',
 
 	'PMS_CONFIRM_WARN'			=> 'Clicking on `Yes` below will delete the number of PMs stated.  This process is <i>irreversible</i>, so please ensure this is your intention.',
