@@ -200,6 +200,8 @@ class main_module
 		$prune_date = explode('-', $prune_date);
 		$prune_date = gmmktime(0, 0, 0, (int) $prune_date[1], (int) $prune_date[0], (int) $prune_date[2]);
 
+		$db->sql_transaction('begin');
+
 		// Get private messages
 		$sql = 'SELECT msg_id
 			FROM ' . PRIVMSGS_TABLE . '
@@ -251,6 +253,8 @@ class main_module
 			$ignored_pms = array_unique($ignored_msg_ids);
 		}
 
+		$db->sql_transaction('commit');
+
 		// now remove the msg ids from the initial array of PMs to delete
 		$pms_msg_id = array_diff($pms_to_purge, $ignored_pms);
 
@@ -285,6 +289,7 @@ class main_module
 
 		$array_count = count($array_chunk);
 
+		$db->sql_transaction('begin');
 		// can't seem to get around having queries in a loop here
 		// need to chunk up the msg_id arrays as some users may have thousands of PMs they're trying to delete
 		for ($i = 0; $i < $array_count; ++$i)
@@ -305,6 +310,7 @@ class main_module
 			// delete the pms
 			$db->sql_query('DELETE FROM ' . PRIVMSGS_TABLE . ' WHERE ' . $db->sql_in_set('msg_id', $pm_msg_ids));
 		}
+		$db->sql_transaction('commit');
 	}
 
 	/* get_admins_mods			an array of administrators and moderators
