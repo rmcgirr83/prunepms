@@ -14,7 +14,7 @@ class main_module
 {
 	var $u_action;
 
-	const block = 10000;
+	const BLOCK = 10000;
 
 	public function main($id, $mode)
 	{
@@ -86,7 +86,7 @@ class main_module
 
 				$template->assign_vars(array(
 					'S_COUNT_PMS'			=> $pm_count,
-					'S_COUNT_TOO_LARGE'		=> ($pm_count > self::block) ? true : false,
+					'S_COUNT_TOO_LARGE'		=> ($pm_count > self::BLOCK) ? true : false,
 					'L_PPMS_TO_PURGE'		=> $user->lang('PPMS_TO_PURGE', count($pm_msg_ids), $format_date),
 				));
 
@@ -188,7 +188,7 @@ class main_module
 			}
 			else
 			{
-				$sql_where = ' WHERE message_time < ' . (int)$prune_date;
+				$sql_where = ' WHERE message_time < ' . (int) $prune_date;
 			}
 		}
 
@@ -221,7 +221,7 @@ class main_module
 			ORDER BY message_time';
 		$result = $db->sql_query($sql);
 
-		$block = self::block;
+		$block = self::BLOCK;
 
 		$count = 0;
 		$pm_stats['pms_range'] = array();
@@ -231,8 +231,8 @@ class main_module
 			if ($count == $block)
 			{
 				$pm_stats['pms_range'][gmdate('M d Y', $row['message_time'])] = $count;
-				$block = $block + self::block;
-				if (($block + self::block) > $pm_stats['pm_count'])
+				$block = $block + self::BLOCK;
+				if (($block + self::BLOCK) > $pm_stats['pm_count'])
 				{
 					$block = $pm_stats['pm_count'];
 				}
@@ -344,7 +344,7 @@ class main_module
 		$pm_msg_ids = array_map('intval', $pm_msg_ids);
 
 		//chunk the array into smaller bites so we don't crash the server
-		$array_chunk = array_chunk($pm_msg_ids, self::block);
+		$array_chunk = array_chunk($pm_msg_ids, self::BLOCK);
 		unset($pm_msg_ids);
 
 		$array_count = count($array_chunk);
