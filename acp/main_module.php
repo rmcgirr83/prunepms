@@ -104,49 +104,49 @@ class main_module
 
 		if (empty($error))
 		{
-		$pm_stats = $this->get_pm_stats($ignore_ams, $prune_date);
-		$pm_count = $pm_stats['pm_count'];
-		$pm_oldest_time = gmdate('M d Y', $pm_stats['oldest_message_time']);
-		$pm_newest_time = gmdate('M d Y', $pm_stats['newest_message_time']);
+			$pm_stats = $this->get_pm_stats($ignore_ams, $prune_date);
+			$pm_count = $pm_stats['pm_count'];
+			$pm_oldest_time = gmdate('M d Y', $pm_stats['oldest_message_time']);
+			$pm_newest_time = gmdate('M d Y', $pm_stats['newest_message_time']);
 
-		$pms_stats_message = '';
+			$pms_stats_message = '';
 
-		if ($pm_count)
-		{
-			if ($ignore_ams_switch)
+			if ($pm_count)
 			{
-				$pms_stats_message = $user->lang('PPMS_TOTAL_STATS_NO_AMS', $pm_count, $pm_oldest_time, $pm_newest_time);
-			}
-			else if (!$ignore_ams_switch)
-			{
-				$pms_stats_message = $user->lang('PPMS_TOTAL_STATS', $pm_count, $pm_oldest_time, $pm_newest_time);
-			}
-		}
-		else
-		{
-			$pms_stats_message = $user->lang('PPMS_NO_STATS', $pm_count);
-		}
-
-		if (count($pm_stats['pms_range']))
-		{
-			$last_element = end($pm_stats['pms_range']);
-			foreach ($pm_stats['pms_range'] as $key => $value)
-			{
-				$pm_date = $key;
-				$pm_count = $value;
-				if ($value == $last_element && !empty($prune_date))
+				if ($ignore_ams_switch)
 				{
-					$pm_date = gmdate('M d Y', $this->format_prune_date($prune_date));
+					$pms_stats_message = $user->lang('PPMS_TOTAL_STATS_NO_AMS', $pm_count, $pm_oldest_time, $pm_newest_time);
 				}
-				//var_dump($pm_date);
-				$template->assign_block_vars('pm_block', array(
-					'MSG_BLOCK'	=> $user->lang('PPMS_MSG_BLOCKS', (int) $pm_count, $pm_date),
-				));
+				else if (!$ignore_ams_switch)
+				{
+					$pms_stats_message = $user->lang('PPMS_TOTAL_STATS', $pm_count, $pm_oldest_time, $pm_newest_time);
+				}
 			}
-		}
+			else
+			{
+				$pms_stats_message = $user->lang('PPMS_NO_STATS', $pm_count);
+			}
 
-		$template->assign_vars(array(
-			'PM_COUNT'		=> $pm_count,
+			if (count($pm_stats['pms_range']))
+			{
+				$last_element = end($pm_stats['pms_range']);
+				foreach ($pm_stats['pms_range'] as $key => $value)
+				{
+					$pm_date = $key;
+					$pm_count = $value;
+					if ($value == $last_element && !empty($prune_date))
+					{
+						$pm_date = gmdate('M d Y', $this->format_prune_date($prune_date));
+					}
+					//var_dump($pm_date);
+					$template->assign_block_vars('pm_block', array(
+						'MSG_BLOCK'	=> $user->lang('PPMS_MSG_BLOCKS', (int) $pm_count, $pm_date),
+					));
+				}
+			}
+
+			$template->assign_vars(array(
+				'PM_COUNT'		=> $pm_count,
 				'L_PPMS_TOTAL_STATS'	=> $pms_stats_message,
 
 				'S_PPMS_STATS'	=> true,
