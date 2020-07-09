@@ -14,7 +14,7 @@ class main_module
 {
 	var $u_action;
 
-	const block = 10000;
+	const BLOCK = 10000;
 
 	public function main($id, $mode)
 	{
@@ -45,7 +45,7 @@ class main_module
 
 		$error = array();
 
-		if (!empty($prune_date) && validate_date($prune_date))
+		if ($prune && validate_date($prune_date))
 		{
 			$error[] = $user->lang('PPMS_INVALID_DATE');
 		}
@@ -86,7 +86,7 @@ class main_module
 
 				$template->assign_vars(array(
 					'S_COUNT_PMS'			=> $pm_count,
-					'S_COUNT_TOO_LARGE'		=> ($pm_count > self::block) ? true : false,
+					'S_COUNT_TOO_LARGE'		=> ($pm_count > self::BLOCK) ? true : false,
 					'L_PPMS_TO_PURGE'		=> $user->lang('PPMS_TO_PURGE', count($pm_msg_ids), $format_date),
 				));
 
@@ -102,62 +102,53 @@ class main_module
 			}
 		}
 
-		if (empty($error))
+		$pm_stats = $this->get_pm_stats($ignore_ams, $prune_date);
+		$pm_count = $pm_stats['pm_count'];
+		$pm_oldest_time = gmdate('M d Y', $pm_stats['oldest_message_time']);
+		$pm_newest_time = gmdate('M d Y', $pm_stats['newest_message_time']);
+
+		$pms_stats_message = '';
+
+		if ($pm_count)
 		{
-			$pm_stats = $this->get_pm_stats($ignore_ams, $prune_date);
-			$pm_count = $pm_stats['pm_count'];
-			$pm_oldest_time = gmdate('M d Y', $pm_stats['oldest_message_time']);
-			$pm_newest_time = gmdate('M d Y', $pm_stats['newest_message_time']);
-
-			$pms_stats_message = '';
-
-			if ($pm_count)
+			if ($ignore_ams_switch)
 			{
-				if ($ignore_ams_switch)
-				{
-					$pms_stats_message = $user->lang('PPMS_TOTAL_STATS_NO_AMS', $pm_count, $pm_oldest_time, $pm_newest_time);
-				}
-				else if (!$ignore_ams_switch)
-				{
-					$pms_stats_message = $user->lang('PPMS_TOTAL_STATS', $pm_count, $pm_oldest_time, $pm_newest_time);
-				}
+				$pms_stats_message = $user->lang('PPMS_TOTAL_STATS_NO_AMS', $pm_count, $pm_oldest_time, $pm_newest_time);
 			}
-			else
+			else if (!$ignore_ams_switch)
 			{
-				$pms_stats_message = $user->lang('PPMS_NO_STATS', $pm_count);
+				$pms_stats_message = $user->lang('PPMS_TOTAL_STATS', $pm_count, $pm_oldest_time, $pm_newest_time);
 			}
+		}
+		else
+		{
+			$pms_stats_message = $user->lang('PPMS_NO_STATS', $pm_count);
+		}
 
-			if (count($pm_stats['pms_range']))
+		if (count($pm_stats['pms_range']))
+		{
+			$last_element = end($pm_stats['pms_range']);
+			foreach ($pm_stats['pms_range'] as $key => $value)
 			{
-				$last_element = end($pm_stats['pms_range']);
-				foreach ($pm_stats['pms_range'] as $key => $value)
+				$pm_date = $key;
+				$pm_count = $value;
+				if ($value == $last_element && !empty($prune_date))
 				{
-					$pm_date = $key;
-					$pm_count = $value;
-					if ($value == $last_element && !empty($prune_date))
-					{
-						$pm_date = gmdate('M d Y', $this->format_prune_date($prune_date));
-					}
-					//var_dump($pm_date);
-					$template->assign_block_vars('pm_block', array(
-						'MSG_BLOCK'	=> $user->lang('PPMS_MSG_BLOCKS', (int) $pm_count, $pm_date),
-					));
+					$pm_date = gmdate('M d Y', $this->format_prune_date($prune_date));
 				}
+				//var_dump($pm_date);
+				$template->assign_block_vars('pm_block', array(
+					'MSG_BLOCK'	=> $user->lang('PPMS_MSG_BLOCKS', (int) $pm_count, $pm_date),
+				));
 			}
-
-			$template->assign_vars(array(
-				'PM_COUNT'		=> $pm_count,
-				'L_PPMS_TOTAL_STATS'	=> $pms_stats_message,
-
-				'S_PPMS_STATS'	=> true,
-			));
 		}
 
 		$template->assign_vars(array(
 			'ERROR'			=> sizeof($error) ? implode('<br />', $error) : '',
+			'PM_COUNT'		=> $pm_count,
 			'PRUNE_DATE'	=> $prune_date,
-
-			'S_SELECTED'	=> $ignore_ams_switch,
+			'S_SELECTED'		=> $ignore_ams_switch,
+			'L_PPMS_TOTAL_STATS'	=> $pms_stats_message,
 			'U_ACTION'		=> $this->u_action,
 		));
 	}
@@ -197,7 +188,7 @@ class main_module
 			}
 			else
 			{
-				$sql_where = ' WHERE message_time < ' . (int)$prune_date;
+				$sql_where = ' WHERE message_time < ' . (int) $prune_date;
 			}
 		}
 
@@ -230,7 +221,7 @@ class main_module
 			ORDER BY message_time';
 		$result = $db->sql_query($sql);
 
-		$block = self::block;
+		$block = self::BLOCK;
 
 		$count = 0;
 		$pm_stats['pms_range'] = array();
@@ -240,8 +231,8 @@ class main_module
 			if ($count == $block)
 			{
 				$pm_stats['pms_range'][gmdate('M d Y', $row['message_time'])] = $count;
-				$block = $block + self::block;
-				if (($block + self::block) > $pm_stats['pm_count'])
+				$block = $block + self::BLOCK;
+				if (($block + self::BLOCK) > $pm_stats['pm_count'])
 				{
 					$block = $pm_stats['pm_count'];
 				}
@@ -287,7 +278,6 @@ class main_module
 		}
 
 		$ignored_pms = array();
-
 		// remove pms that should be ignored
 		if ($ignore_ams)
 		{
@@ -354,7 +344,7 @@ class main_module
 		$pm_msg_ids = array_map('intval', $pm_msg_ids);
 
 		//chunk the array into smaller bites so we don't crash the server
-		$array_chunk = array_chunk($pm_msg_ids, self::block);
+		$array_chunk = array_chunk($pm_msg_ids, self::BLOCK);
 		unset($pm_msg_ids);
 
 		$array_count = count($array_chunk);
