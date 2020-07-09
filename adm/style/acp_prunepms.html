@@ -6,10 +6,10 @@
 
 <p>{{ lang('ACP_PPMS_EXPLAIN') }}</p>
 
-{% if PM_COUNT %}
+{% if PPMS_COUNT %}
 <div class="errorbox notice">
 	<h3>{{ lang('NOTICE') }}</h3>
-	<p>{{ lang('PMS_WARN') }}</p>
+	<p>{{ lang('PPMS_WARN') }}</p>
 </div>
 {% endif %}
 
@@ -23,15 +23,20 @@
 <form id="acp_prunepms" method="post" action="{{ U_ACTION }}">
 
 <fieldset>
-	<legend>{{ lang('PMS_STATS') }}</legend>
-	<p><strong>{{ lang('PM_TOTAL_STATS') }}</strong></p>
+	<legend>{{ lang('PPMS_STATS') }}</legend>
+	<p><strong>{{ lang('PPMS_TOTAL_STATS') }}</strong></p>
+	{% for pm_block in loops.pm_block %} 
+	<div style="padding-left:20px;">
+		{{ pm_block.MSG_BLOCK }}
+	</div>
+	{% endfor %}
 </fieldset>
 
 <fieldset>
 	<legend>{{ lang('CRITERIA') }}</legend>
 
 	<dl>
-		<dt><label for="prune_date">{{ lang('PMS_BEFORE_DATE') }}{{ lang('COLON') }}</label><br /><span>{{ lang('PMS_BEFORE_DATE_EXPLAIN') }}</span></dt>
+		<dt><label for="prune_date">{{ lang('PPMS_BEFORE_DATE') }}{{ lang('COLON') }}</label><br /><span>{{ lang('PPMS_BEFORE_DATE_EXPLAIN') }}</span></dt>
 		<dd>
 			<strong>{{ lang('BEFORE') }}</strong> <input type="text" id="prune_date" name="prune_date" value="{PRUNE_DATE}" />
 		</dd>
@@ -43,9 +48,9 @@
 	</dl>
 
 	<p class="submit-buttons">
-		<input type="hidden" name="prune" value="1" />
 
-		<input class="button2" type="submit" id="update" name="update" value="{{ lang('SUBMIT') }}" />&nbsp;
+		<input class="button2" type="submit" id="pms_refresh" name="pms_refresh" value="{{ lang('PPMS_REFRESH') }}" />&nbsp;
+		<input class="button2" type="submit" id="prune" name="prune" value="{{ lang('SUBMIT') }}" />&nbsp;
 		<input class="button2" type="reset" id="reset" name="reset" value="{{ lang('RESET') }}" />
 		{{ S_FORM_TOKEN }}
 	</p>

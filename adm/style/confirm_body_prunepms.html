@@ -4,13 +4,13 @@
 <form id="confirm" method="post" action="{S_CONFIRM_ACTION}">
 
 <div class="errorbox">
-	<h3>{L_WARNING}</h3>
-	<p>{L_PMS_CONFIRM_WARN}</p>
+	<h3>{{ lang('WARNING') }}</h3>
+	<p>{{ lang('PPMS_TO_PURGE') }}</p>
+	{% if S_COUNT_TOO_LARGE %}
+	<p>{{ lang('PPMS_CHANGE_DATE') }}</p>
+	{% endif %}
+	<p>{{ lang('PPMS_CONFIRM_WARN') }}</p>
 </div>
-
-<fieldset id="pmcount">
-	<h2>{L_PMS_TO_PURGE}</h2>
-</fieldset>
 
 <fieldset>
 	<h1>{MESSAGE_TITLE}</h1>
@@ -26,8 +26,8 @@
 </form>
 {% else %}
 <div class="errorbox">
-	<h3>{L_WARNING}</h3>
-	<p><strong>{L_PMS_PRUNE_FAILURE}</strong></p>
+	<h3>{{ lang('WARNING') }}</h3>
+	<p><strong>{{ lang('PPMS_PRUNE_FAILURE') }}</strong></p>
 </div>
 {% endif %}
 
