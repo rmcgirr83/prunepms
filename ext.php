@@ -8,7 +8,7 @@
 *
 */
 
-namespace rmcgirr83\activationjustification;
+namespace rmcgirr83\prunepms;
 
 /**
 * Extension class for custom enable/disable/purge actions
