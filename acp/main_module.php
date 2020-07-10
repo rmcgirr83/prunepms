@@ -125,7 +125,7 @@ class main_module
 				$pms_stats_message = $language->lang('PPMS_NO_STATS_NO_AMS', $pm_msg_ids_count, (empty($prune_date) ? $this->format_to_gmdate(time()) : ''));
 			}
 			else
-		{
+			{
 				$pms_stats_message = $language->lang('PPMS_NO_STATS', $pm_msg_ids_count, (empty($prune_date) ? $this->format_to_gmdate(time()) : ''));
 			}
 		}
