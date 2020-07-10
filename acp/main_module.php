@@ -138,7 +138,7 @@ class main_module
 					{
 						$pm_date = gmdate('M d Y', $this->format_prune_date($prune_date));
 					}
-					//var_dump($pm_date);
+
 					$template->assign_block_vars('pm_block', array(
 						'MSG_BLOCK'	=> $user->lang('PPMS_MSG_BLOCKS', (int) $pm_count, $pm_date),
 					));
