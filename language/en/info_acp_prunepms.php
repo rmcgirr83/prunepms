@@ -50,9 +50,10 @@ $lang = array_merge($lang, array(
 
 	'PPMS_PRUNE_FAILURE'			=> 'No private messages fit the selected criteria',
 	'PPMS_STATS'					=> 'Private Message statistics',
-	'PPMS_TOTAL_STATS_NO_AMS'		=> 'There are a total of <i>%d</i> private messages in the database having dates between <i>%1s</i> and <i>%2s</i>.  This number excludes administrators and moderators.',
-	'PPMS_TOTAL_STATS'			=> 'There are a total of <i>%d</i> private messages in the database having dates between <i>%1s</i> and <i>%2s</i>.',
-	'PPMS_NO_STATS'				=> 'There are <i>%d</i> private messages to be deleted',
+	'PPMS_TOTAL_STATS'		=> 'There are a total of <i>%d</i> private messages in the database having dates of <i>%2$s</i> through <i>%3$s</i>.',
+	'PPMS_TOTAL_STATS_NO_AMS'	=> 'There are a total of <i>%d</i> private messages in the database having dates of <i>%2$s</i> through <i>%3$s</i>. This number excludes administrators and moderators.',
+	'PPMS_NO_STATS'			=> 'There are <i>%d</i> private messages to be deleted with a date before %2$s.',
+	'PPMS_NO_STATS_NO_AMS'	=> 'There are <i>%d</i> private messages to be deleted with a date before %2$s. This number excludes administrators and moderators.',
 	'PPMS_CHANGE_DATE'			=> 'The number of private messages to delete is very large.  You should click on "No" and change the date to reduce server load.',
 	'PPMS_MSG_BLOCKS'			=> '%d private messages before %s',
 	'PPMS_WARN'					=> '<strong>Running this script will remove private messages from your database prior to the date as specified below. </strong><br>It is <strong>strongly</strong> recommended you make a backup as the process is irreversible. The author of this script takes <strong>NO RESPONSIBILITY</strong> for actions you preform using this script.<br><strong>YOU’VE BEEN WARNED!</strong>',
@@ -66,8 +67,9 @@ $lang = array_merge($lang, array(
 	'PPMS_INVALID_DATE'		=> 	'The date has to be formatted <kbd>DD-MM-YYYY</kbd>.',
 
 	'PPMS_MESSAGES_DELETED'	=> 'Selected private messages have been deleted.',
+	'PPMS_PRUNE'			=> 'Prune',
 	'PPMS_TO_PURGE'			=> '<strong><i>%d</i></strong> private messages with a date prior to <i>%s</i> will be purged!!',
 	// ACP Logs
-	'LOG_PPMS_DELETED'		=> '<strong>Prune PMS  - private messages have been deleted.</strong>',
+	'LOG_PPMS_DELETED'		=> '<strong>Prune PMs  - %d private messages were deleted on %2$s.</strong>',
 	'PPMS_DELETED_SUCCESS'	=> 'Private messages were successfully deleted',
 ));

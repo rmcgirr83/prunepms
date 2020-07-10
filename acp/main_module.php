@@ -14,12 +14,13 @@ class main_module
 {
 	var $u_action;
 
+	// constant used for setting chunks on the array of msg ids
 	const BLOCK = 10000;
 
 	public function main($id, $mode)
 	{
 
-		global $user, $template, $phpbb_log, $request;
+		global $user, $language, $template, $phpbb_log, $request;
 		global $phpbb_root_path, $phpEx;
 
 		if (!function_exists('validate_date'))
@@ -27,12 +28,19 @@ class main_module
 			include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
 		}
 
-		$user->add_lang(array('acp/prune', 'memberlist'));
+		$language->add_lang(array('acp/prune', 'memberlist'));
 
 		$this->tpl_name = 'acp_prunepms';
 		$this->page_title = 'ACP_PPMS';
 
-		$prune = $request->is_set_post('prune');
+		$prune = $request->variable('prune', false);
+
+		$cancel = $request->variable('cancel', false);
+
+		if ($cancel)
+		{
+			$prune = false;
+		}
 
 		$prune_date = $request->variable('prune_date', '');
 
@@ -47,26 +55,27 @@ class main_module
 
 		if (!empty($prune_date) && validate_date($prune_date))
 		{
-			$error[] = $user->lang('PPMS_INVALID_DATE');
+			$error[] = $language->lang('PPMS_INVALID_DATE');
+			$prune = false;
 		}
 
-		if ($prune && empty($error))
-		{
 			// private message ids that will get pruned
 			$pm_msg_ids = $this->get_prune_pms($prune_date, $ignore_ams);
 
+		if ($prune)
+		{
 			if (confirm_box(true))
 			{
 				if (count($pm_msg_ids))
 				{
 					$this->delete_pms($pm_msg_ids);
 
-					$phpbb_log->add('admin', $user->data['user_id'], $user->ip, 'LOG_PPMS_DELETED', false, array(count($pm_msg_ids)));
-					$msg = $user->lang('PPMS_DELETED_SUCCESS');
+					$phpbb_log->add('admin', $user->data['user_id'], $user->ip, 'LOG_PPMS_DELETED', false, array(count($pm_msg_ids), $user->format_date(time())));
+					$msg = $language->lang('PPMS_DELETED_SUCCESS');
 				}
 				else
 				{
-					$msg = $user->lang('PPMS_PRUNE_FAILURE');
+					$msg = $language->lang('PPMS_PRUNE_FAILURE');
 				}
 
 				trigger_error($msg . adm_back_link($this->u_action));
@@ -75,25 +84,31 @@ class main_module
 			{
 				if (!count($pm_msg_ids))
 				{
-					trigger_error($user->lang('PPMS_PRUNE_FAILURE') . adm_back_link($this->u_action), E_USER_WARNING);
+					trigger_error($language->lang('PPMS_PRUNE_FAILURE') . adm_back_link($this->u_action), E_USER_WARNING);
 				}
 
-				$format_date = explode('-', $prune_date);
-				$format_date = gmmktime(0, 0, 0, (int) $format_date[1], (int) $format_date[0], (int) $format_date[2]);
-				$format_date = gmdate('M d Y', $format_date);
+				if (!empty($prune_date))
+				{
+					$format_date = $this->format_prune_date($prune_date);
+					$format_date = $this->format_to_gmdate($format_date);
+				}
+				else
+				{
+					$format_date = $this->format_to_gmdate(time());
+				}
 
 				$pm_count = count($pm_msg_ids);
 
 				$template->assign_vars(array(
 					'S_COUNT_PMS'			=> $pm_count,
 					'S_COUNT_TOO_LARGE'		=> ($pm_count > self::BLOCK) ? true : false,
-					'L_PPMS_TO_PURGE'		=> $user->lang('PPMS_TO_PURGE', count($pm_msg_ids), $format_date),
+					'L_PPMS_TO_PURGE'		=> $language->lang('PPMS_TO_PURGE', count($pm_msg_ids), $format_date),
 				));
 
-				confirm_box(false, $user->lang['CONFIRM_OPERATION'], build_hidden_fields(array(
+				confirm_box(false, $language->lang('CONFIRM_OPERATION'), build_hidden_fields(array(
 					'i'				=> $id,
 					'mode'			=> $mode,
-					'prune'			=> 1,
+					'prune'			=> $prune,
 
 					'prune_date' 	=> $request->variable('prune_date', ''),
 					'ignore_ams'	=> $request->variable('ignore_ams', 0),
@@ -102,29 +117,37 @@ class main_module
 			}
 		}
 
-		if (empty($error))
+		$pm_msg_ids_count = count($pm_msg_ids);
+		if (!$pm_msg_ids_count)
 		{
-			$pm_stats = $this->get_pm_stats($ignore_ams, $prune_date);
-			$pm_count = $pm_stats['pm_count'];
-			$pm_oldest_time = gmdate('M d Y', $pm_stats['oldest_message_time']);
-			$pm_newest_time = gmdate('M d Y', $pm_stats['newest_message_time']);
+			if ($ignore_ams_switch)
+			{
+				$pms_stats_message = $language->lang('PPMS_NO_STATS_NO_AMS', $pm_msg_ids_count, (empty($prune_date) ? $this->format_to_gmdate(time()) : ''));
+			}
+			else
+		{
+				$pms_stats_message = $language->lang('PPMS_NO_STATS', $pm_msg_ids_count, (empty($prune_date) ? $this->format_to_gmdate(time()) : ''));
+			}
+		}
 
-			$pms_stats_message = '';
+		if (empty($error) && $pm_msg_ids_count)
+		{
+			$pm_stats = $this->get_pm_stats($pm_msg_ids);
+			$pm_count = $pm_stats['pm_count'];
+			$pm_oldest_time = (isset($pm_stats['oldest_message_time'])) ? $this->format_to_gmdate($pm_stats['oldest_message_time']) : '';
+			$pm_newest_time = (isset($pm_stats['newest_message_time'])) ? $this->format_to_gmdate($pm_stats['newest_message_time']) : '';
 
 			if ($pm_count)
 			{
-				if ($ignore_ams_switch)
+				$pm_times_set = (!empty($pm_oldest_time) && !empty($pm_newest_time)) ? true : false;
+				if ($ignore_ams_switch && $pm_times_set)
 				{
-					$pms_stats_message = $user->lang('PPMS_TOTAL_STATS_NO_AMS', $pm_count, $pm_oldest_time, $pm_newest_time);
+					$pms_stats_message = $language->lang('PPMS_TOTAL_STATS_NO_AMS', $pm_count, $pm_oldest_time, $pm_newest_time);
 				}
-				else if (!$ignore_ams_switch)
+				else if (!$ignore_ams_switch && $pm_times_set)
 				{
-					$pms_stats_message = $user->lang('PPMS_TOTAL_STATS', $pm_count, $pm_oldest_time, $pm_newest_time);
+					$pms_stats_message = $language->lang('PPMS_TOTAL_STATS', $pm_count, $pm_oldest_time, $pm_newest_time);
 				}
-			}
-			else
-			{
-				$pms_stats_message = $user->lang('PPMS_NO_STATS', $pm_count);
 			}
 
 			if (count($pm_stats['pms_range']))
@@ -132,113 +155,70 @@ class main_module
 				$last_element = end($pm_stats['pms_range']);
 				foreach ($pm_stats['pms_range'] as $key => $value)
 				{
-					$pm_date = $key;
+					$pm_date = $this->format_to_gmdate($key);
 					$pm_count = $value;
 					if ($value == $last_element && !empty($prune_date))
 					{
-						$pm_date = gmdate('M d Y', $this->format_prune_date($prune_date));
+						$pm_date = $this->format_to_gmdate($this->format_prune_date($prune_date));
 					}
 
 					$template->assign_block_vars('pm_block', array(
-						'MSG_BLOCK'	=> $user->lang('PPMS_MSG_BLOCKS', (int) $pm_count, $pm_date),
+						'MSG_BLOCK'	=> $language->lang('PPMS_MSG_BLOCKS', (int) $pm_count, $pm_date),
 					));
 				}
 			}
-
-			$template->assign_vars(array(
-				'PM_COUNT'		=> $pm_count,
-				'L_PPMS_TOTAL_STATS'	=> $pms_stats_message,
-
-				'S_PPMS_STATS'	=> true,
-			));
 		}
 
 		$template->assign_vars(array(
 			'ERROR'			=> sizeof($error) ? implode('<br />', $error) : '',
 			'PRUNE_DATE'	=> $prune_date,
+			'L_PPMS_TOTAL_STATS'	=> (isset($pms_stats_message)) ? $pms_stats_message : false,
+
+			'S_PPMS_STATS'	=> (!empty($pms_stats_message) && !$error) ? true : false,
+			'S_PPMS_COUNT'	=> $pm_msg_ids_count,
 			'S_SELECTED'		=> $ignore_ams_switch,
 			'U_ACTION'		=> $this->u_action,
 		));
 	}
 
-	/* get_pm_stats				private message statistics
+	/*
+	* private message statistics
 	*
-	* @param	$ignore_ams		array 	administrators and moderators that we ignore
-	* @param	$prune_date		string 	the date to sort on
+	* @param	array	$pm_msg_ids		private message ids
 	*
 	* @access	private
 	* @return	array			array of private message statistics
 	*/
-	private function get_pm_stats($ignore_ams = array(), $prune_date = '')
+	private function get_pm_stats($pm_msg_ids = array())
 	{
-		global $db, $user;
-
-		$sql_where = '';
-
-		// ensure the parameter is an array
-		if (!is_array($ignore_ams))
-		{
-			$ignore_ams = array($ignore_ams);
-		}
-
-		if (sizeof(array_filter($ignore_ams)))
-		{
-			$sql_where = ' WHERE ' . $db->sql_in_set('author_id', $ignore_ams, true);
-		}
-
-		if (!empty($prune_date))
-		{
-			$prune_date = $this->format_prune_date($prune_date);
-
-			if (!empty($sql_where))
-			{
-				$sql_where .= ' AND message_time < ' . (int) $prune_date;
-			}
-			else
-			{
-				$sql_where = ' WHERE message_time < ' . (int) $prune_date;
-			}
-		}
+		global $db;
 
 		$pm_stats = array();
 
-		// get total count of PMs
-		$sql = 'SELECT COUNT(msg_id) as msg_id_count
-			FROM ' . PRIVMSGS_TABLE . $sql_where;
-		$result = $db->sql_query($sql);
-		$pm_stats['pm_count'] = (int) $db->sql_fetchfield('msg_id_count');
-		$db->sql_freeresult($result);
-
-		// get oldest message date
-		$sql = 'SELECT MIN(message_time) as oldest_message_time
-			FROM ' . PRIVMSGS_TABLE . $sql_where;
-		$result = $db->sql_query($sql);
-		$pm_stats['oldest_message_time'] = (int) $db->sql_fetchfield('oldest_message_time');
-		$db->sql_freeresult($result);
-
-		// get newest message date
-		$sql = 'SELECT MAX(message_time) as newest_message_time
-			FROM ' . PRIVMSGS_TABLE . $sql_where;
-		$result = $db->sql_query($sql);
-		$pm_stats['newest_message_time'] = (int) $db->sql_fetchfield('newest_message_time');
-		$db->sql_freeresult($result);
+		$pm_stats['pm_count'] = count($pm_msg_ids);
 
 		// get date range and PM counts
 		$sql = 'SELECT message_time
-			FROM ' . PRIVMSGS_TABLE . $sql_where. '
-			ORDER BY message_time';
+			FROM ' . PRIVMSGS_TABLE . '
+			WHERE ' . $db->sql_in_set('msg_id', $pm_msg_ids);
 		$result = $db->sql_query($sql);
+		if (!($row = $db->sql_fetchrow($result)))
+		{
+			$db->sql_freeresult($result);
+			return 'NO_USERS';
+		}
 
 		$block = self::BLOCK;
-
 		$count = 0;
-		$pm_stats['pms_range'] = array();
-		while ($row = $db->sql_fetchrow($result))
+
+		$pm_stats['pms_range'] = $pm_date_range = array();
+		do
 		{
+			$pm_date_range[] = (int) $row['message_time'];
 			$count++;
 			if ($count == $block)
 			{
-				$pm_stats['pms_range'][gmdate('M d Y', $row['message_time'])] = $count;
+				$pm_stats['pms_range'][$row['message_time']] = $count;
 				$block = $block + self::BLOCK;
 				if (($block + self::BLOCK) > $pm_stats['pm_count'])
 				{
@@ -246,15 +226,23 @@ class main_module
 				}
 			}
 		}
+		while ($row = $db->sql_fetchrow($result));
 		$db->sql_freeresult($result);
+
+		if (count($pm_date_range))
+		{
+			$pm_stats['oldest_message_time'] = min(array_values($pm_date_range));
+			$pm_stats['newest_message_time'] = max(array_values($pm_date_range));
+		}
 
 		return $pm_stats;
 	}
 
-	/* get_prune_pms			determine which pms to delete
+	/*
+	* determine which pms to delete
 	*
-	* @param	$prune_date		string	the date that will determine the cutoff
-	* @param	$ignore_ams		array 	administrators and moderators
+	* @param	string	$prune_date		the date that will determine the cutoff
+	* @param	array	$ignore_ams		administrators and moderators
 	*
 	* @access	private
 	* @return	array			an array of msg_ids
@@ -268,12 +256,24 @@ class main_module
 			$prune_date = $this->format_prune_date($prune_date);
 		}
 
+		// if prune_date is empty use current time
+		if (empty($prune_date))
+		{
+			$prune_date = time();
+		}
+
+		$sql_and = '';
+		if (count($ignore_ams))
+		{
+			$sql_and = ' AND ' . $db->sql_in_set('author_id', $ignore_ams, true);
+		}
+
 		$db->sql_transaction('begin');
 
 		// Get private messages
 		$sql = 'SELECT msg_id
 			FROM ' . PRIVMSGS_TABLE . '
-			WHERE message_time < ' . (int) $prune_date;
+			WHERE message_time < ' . (int) $prune_date . $sql_and;
 		$result = $db->sql_query($sql);
 		$row = $db->sql_fetchrowset($result);
 		$db->sql_freeresult($result);
@@ -285,14 +285,17 @@ class main_module
 			$pms_to_purge[] = $value['msg_id'];
 		}
 
-		$ignored_pms = array();
+		//free up some memory
+		unset($row);
+
+		$ignored_msg_ids = array();
 		// remove pms that should be ignored
 		if ($ignore_ams)
 		{
 			// ignore msg_id where author is admin or mod
 			$sql = 'SELECT msg_id
 				FROM ' . PRIVMSGS_TO_TABLE . '
-				WHERE ' . $db->sql_in_set('author_id', $ignore_ams);
+				WHERE ' . $db->sql_in_set('author_id', $ignore_ams) . ' OR ' . $db->sql_in_set('user_id', $ignore_ams);
 			$result = $db->sql_query($sql);
 			$row = $db->sql_fetchrowset($result);
 			$db->sql_freeresult($result);
@@ -303,41 +306,32 @@ class main_module
 				$ignored_msg_ids[] = $value['msg_id'];
 			}
 
-			// now do the same for user_id
-			// ignore msg_id where user is admin or mod
-			$sql = 'SELECT msg_id
-				FROM ' . PRIVMSGS_TO_TABLE . '
-				WHERE ' . $db->sql_in_set('user_id', $ignore_ams);
-			$result = $db->sql_query($sql);
-			$row = $db->sql_fetchrowset($result);
-			$db->sql_freeresult($result);
-
-			foreach ($row as $key => $value)
-			{
-				$ignored_msg_ids[] = $value['msg_id'];
-			}
+			//free up some memory
+			unset($row);
 
 			//only return unique values
-			$ignored_pms = array_unique($ignored_msg_ids);
+			$ignored_msg_ids = array_unique($ignored_msg_ids);
+			asort($ignored_msg_ids);
 		}
 
 		$db->sql_transaction('commit');
 
 		// now remove the msg ids from the initial array of PMs to delete
-		$pms_msg_id = array_diff($pms_to_purge, $ignored_pms);
+		$pm_msg_ids = array_diff($pms_to_purge, $ignored_msg_ids);
 
 		// sort the array
-		asort($pms_msg_id);
+		asort($pm_msg_ids);
 
-		return $pms_msg_id;
+		return $pm_msg_ids;
 	}
 
-	/* delete_pms				actual deletion of the pms
+	/*
+	* actual deletion of the pms
 	*
-	* @param	$pm_msg_ids		array	msg_ids
+	* @param	array	$pm_msg_ids		msg_ids
 	*
 	* @access	private
-	* @return	null
+	* @return	void
 	*/
 	private function delete_pms($pm_msg_ids)
 	{
@@ -382,7 +376,8 @@ class main_module
 		$db->sql_transaction('commit');
 	}
 
-	/* get_admins_mods			returns an array of administrators and moderators
+	/*
+	* get_admins_mods		returns an array of administrators and moderators
 	*
 	* @access	private
 	* @return	array
@@ -413,7 +408,8 @@ class main_module
 		return array_unique(array_merge($admin_ary, $mod_ary, $forum_mod));
 	}
 
-	/* format_prune_date			normalize msg_id dates
+	/*
+	* format_prune_date		normalize dates to integers
 	*
 	* @access	private
 	* @return	int
@@ -425,5 +421,20 @@ class main_module
 		$prune_date = gmmktime(0, 0, 0, (int) $prune_date[1], (int) $prune_date[0], (int) $prune_date[2]);
 
 		return (int) $prune_date;
+	}
+
+
+	/*
+	* format_to_gmdate		normalize dates to strings
+	*
+	* @access	private
+	* @return	string
+	*/
+	private function format_to_gmdate($date)
+	{
+		$date = (int) $date;
+		$date = gmdate('M d Y', $date);
+
+		return (string) $date;
 	}
 }

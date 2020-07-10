@@ -3,7 +3,7 @@
 	"type": "phpbb-extension",
 	"description": "An extension which allows you to delete older private messages in your phpBB forum. Found under `Users and Groups` tab => users.",
 	"homepage": "https://phpbb.com",
-	"version": "1.1.0",
+	"version": "1.2.0",
 	"keywords": ["phpbb", "extension", "cleaner"],
 	"license": "GPL-2.0-only",
 	"authors": [

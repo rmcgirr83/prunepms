@@ -34,6 +34,7 @@
 </fieldset>
 {% endif %}
 
+{% if S_PPMS_COUNT %}
 <fieldset>
 	<legend>{{ lang('CRITERIA') }}</legend>
 
@@ -51,12 +52,13 @@
 
 	<p class="submit-buttons">
 
-		<input class="button2" type="submit" id="pms_refresh" name="pms_refresh" value="{{ lang('PPMS_REFRESH') }}" />&nbsp;
-		<input class="button2" type="submit" id="prune" name="prune" value="{{ lang('SUBMIT') }}" />&nbsp;
+		<input class="button2" type="submit" id="refresh" name="refresh" value="{{ lang('PPMS_REFRESH') }}" />&nbsp;
+		<input class="button2" type="submit" id="prune" name="prune" value="{{ lang('PPMS_PRUNE') }}" />&nbsp;
 		<input class="button2" type="reset" id="reset" name="reset" value="{{ lang('RESET') }}" />
 		{{ S_FORM_TOKEN }}
 	</p>
 </fieldset>
+{% endif %}
 </form>
 
 {% INCLUDE 'overall_footer.html' %}
